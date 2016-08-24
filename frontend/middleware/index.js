@@ -1,7 +1,7 @@
-import { query } from './util'
-import { receiveQueryData } from './actions'
+import { query } from '../util'
+import { receiveQueryData } from '../actions'
 
-export const APIMiddleware = dispatch => next => action => {
+const APIMiddleware = ({dispatch, getState}) => next => action => {
   const querySuccess = (data) => dispatch(receiveQueryData(data))
   switch(action.type) {
     case 'UPDATE_QUERY':
@@ -9,4 +9,10 @@ export const APIMiddleware = dispatch => next => action => {
     default:
       return next(action)
   }
-} 
+}
+
+import { applyMiddleware } from 'redux';
+
+export default applyMiddleware(
+  APIMiddleware
+)

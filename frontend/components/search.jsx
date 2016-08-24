@@ -2,7 +2,9 @@ import React from 'react'
 
 class Search extends React.Component {
   render () {
-    <input type="text" placeholder="Search..." onChange={updateQuery} />
+    return (
+      <input type="text" placeholder="Search..." onInput={this.props.updateQuery} />
+    )
   }
 }
 
