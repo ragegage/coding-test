@@ -52,6 +52,10 @@
 	
 	var _react2 = _interopRequireDefault(_react);
 	
+	var _root = __webpack_require__(!(function webpackMissingModule() { var e = new Error("Cannot find module \"./components/root\""); e.code = 'MODULE_NOT_FOUND'; throw e; }()));
+	
+	var _root2 = _interopRequireDefault(_root);
+	
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 	
 	document.addEventListener("DOMContentLoaded", function () {
