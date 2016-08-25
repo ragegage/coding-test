@@ -3,11 +3,14 @@ import React from 'react'
 class Map extends React.Component {
   componentDidMount() {
     // create map
+    this.map = new google.maps.Map(document.getElementById('map'), mapOptions);
   }
   
   render () {
-    // this.placeMarkers()
-    <p>this is the map</p>
+    this.placeMarkers()
+    return (
+      <div id="map"></div>
+    )
   }
 
   placeMarkers() {
