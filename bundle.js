@@ -23044,7 +23044,23 @@
 	  _createClass(Search, [{
 	    key: "render",
 	    value: function render() {
-	      return _react2.default.createElement("input", { type: "text", placeholder: "Search...", onInput: this.props.updateQuery });
+	      debugger;
+	      return _react2.default.createElement(
+	        "header",
+	        null,
+	        _react2.default.createElement("input", { type: "text", placeholder: "Search...", onInput: this.props.updateQuery }),
+	        _react2.default.createElement(
+	          "ul",
+	          null,
+	          this.props.list.map(function (place) {
+	            return _react2.default.createElement(
+	              "li",
+	              null,
+	              place.locations
+	            );
+	          })
+	        )
+	      );
 	    }
 	  }]);
 	
@@ -23139,7 +23155,7 @@
 	  value: true
 	});
 	var PlacesReducer = function PlacesReducer() {
-	  var state = arguments.length <= 0 || arguments[0] === undefined ? {} : arguments[0];
+	  var state = arguments.length <= 0 || arguments[0] === undefined ? [] : arguments[0];
 	  var action = arguments[1];
 	
 	  switch (action.type) {

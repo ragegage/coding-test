@@ -1,4 +1,4 @@
-const PlacesReducer = (state = {}, action) => {
+const PlacesReducer = (state = [], action) => {
   switch(action.type){
     case 'UPDATE_QUERY': // show loading icon
       return state;
