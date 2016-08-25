@@ -12,9 +12,6 @@ html, body {
 header {
   position: relative;
   z-index: 3;
-}
-
-ul {
   max-width: 300px;
   background: white;
 }
