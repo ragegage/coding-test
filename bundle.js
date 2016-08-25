@@ -197,7 +197,6 @@
 /***/ function(module, exports) {
 
 	// shim for using process in browser
-	
 	var process = module.exports = {};
 	
 	// cached from whatever global is present so that test runners that stub it
@@ -209,21 +208,63 @@
 	var cachedClearTimeout;
 	
 	(function () {
-	  try {
-	    cachedSetTimeout = setTimeout;
-	  } catch (e) {
-	    cachedSetTimeout = function () {
-	      throw new Error('setTimeout is not defined');
+	    try {
+	        cachedSetTimeout = setTimeout;
+	    } catch (e) {
+	        cachedSetTimeout = function () {
+	            throw new Error('setTimeout is not defined');
+	        }
 	    }
-	  }
-	  try {
-	    cachedClearTimeout = clearTimeout;
-	  } catch (e) {
-	    cachedClearTimeout = function () {
-	      throw new Error('clearTimeout is not defined');
+	    try {
+	        cachedClearTimeout = clearTimeout;
+	    } catch (e) {
+	        cachedClearTimeout = function () {
+	            throw new Error('clearTimeout is not defined');
+	        }
 	    }
-	  }
 	} ())
+	function runTimeout(fun) {
+	    if (cachedSetTimeout === setTimeout) {
+	        //normal enviroments in sane situations
+	        return setTimeout(fun, 0);
+	    }
+	    try {
+	        // when when somebody has screwed with setTimeout but no I.E. maddness
+	        return cachedSetTimeout(fun, 0);
+	    } catch(e){
+	        try {
+	            // When we are in I.E. but the script has been evaled so I.E. doesn't trust the global object when called normally
+	            return cachedSetTimeout.call(null, fun, 0);
+	        } catch(e){
+	            // same as above but when it's a version of I.E. that must have the global object for 'this', hopfully our context correct otherwise it will throw a global error
+	            return cachedSetTimeout.call(this, fun, 0);
+	        }
+	    }
+	
+	
+	}
+	function runClearTimeout(marker) {
+	    if (cachedClearTimeout === clearTimeout) {
+	        //normal enviroments in sane situations
+	        return clearTimeout(marker);
+	    }
+	    try {
+	        // when when somebody has screwed with setTimeout but no I.E. maddness
+	        return cachedClearTimeout(marker);
+	    } catch (e){
+	        try {
+	            // When we are in I.E. but the script has been evaled so I.E. doesn't  trust the global object when called normally
+	            return cachedClearTimeout.call(null, marker);
+	        } catch (e){
+	            // same as above but when it's a version of I.E. that must have the global object for 'this', hopfully our context correct otherwise it will throw a global error.
+	            // Some versions of I.E. have different rules for clearTimeout vs setTimeout
+	            return cachedClearTimeout.call(this, marker);
+	        }
+	    }
+	
+	
+	
+	}
 	var queue = [];
 	var draining = false;
 	var currentQueue;
@@ -248,7 +289,7 @@
 	    if (draining) {
 	        return;
 	    }
-	    var timeout = cachedSetTimeout(cleanUpNextTick);
+	    var timeout = runTimeout(cleanUpNextTick);
 	    draining = true;
 	
 	    var len = queue.length;
@@ -265,7 +306,7 @@
 	    }
 	    currentQueue = null;
 	    draining = false;
-	    cachedClearTimeout(timeout);
+	    runClearTimeout(timeout);
 	}
 	
 	process.nextTick = function (fun) {
@@ -277,7 +318,7 @@
 	    }
 	    queue.push(new Item(fun, args));
 	    if (queue.length === 1 && !draining) {
-	        cachedSetTimeout(drainQueue, 0);
+	        runTimeout(drainQueue);
 	    }
 	};
 	
@@ -21393,9 +21434,9 @@
 	
 	var _reactRedux = __webpack_require__(173);
 	
-	var _search_con = __webpack_require__(196);
+	var _app = __webpack_require__(204);
 	
-	var _search_con2 = _interopRequireDefault(_search_con);
+	var _app2 = _interopRequireDefault(_app);
 	
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 	
@@ -21404,7 +21445,7 @@
 	  return _react2.default.createElement(
 	    _reactRedux.Provider,
 	    { store: store },
-	    _react2.default.createElement(_search_con2.default, null)
+	    _react2.default.createElement(_app2.default, null)
 	  );
 	};
 
@@ -23038,25 +23079,41 @@
 	  function Search() {
 	    _classCallCheck(this, Search);
 	
-	    return _possibleConstructorReturn(this, Object.getPrototypeOf(Search).apply(this, arguments));
+	    return _possibleConstructorReturn(this, (Search.__proto__ || Object.getPrototypeOf(Search)).apply(this, arguments));
 	  }
 	
 	  _createClass(Search, [{
+	    key: "componentDidMount",
+	    value: function componentDidMount() {
+	      this.props.updateQuery({ target: { value: "" } });
+	    }
+	  }, {
 	    key: "render",
 	    value: function render() {
-	      debugger;
 	      return _react2.default.createElement(
 	        "header",
 	        null,
 	        _react2.default.createElement("input", { type: "text", placeholder: "Search...", onInput: this.props.updateQuery }),
 	        _react2.default.createElement(
+	          "span",
+	          null,
+	          this.props.list.length > 9 ? "at least " : "",
+	          this.props.list.length,
+	          " matches"
+	        ),
+	        _react2.default.createElement(
 	          "ul",
 	          null,
-	          this.props.list.map(function (place) {
+	          _react2.default.createElement(
+	            "li",
+	            { key: "title-li" },
+	            "Matches:"
+	          ),
+	          this.props.list.map(function (item) {
 	            return _react2.default.createElement(
 	              "li",
-	              null,
-	              place.locations
+	              { key: item.title + " " + item.locations },
+	              item.title
 	            );
 	          })
 	        )
@@ -23229,12 +23286,211 @@
 	    mode: 'cors',
 	    cache: 'default' };
 	
-	  fetch("https://data.sfgov.org/resource/wwmu-gmzc.json?$where=starts_with(lower(actor_1),%20%27" + q + "%27)", options).then(function (resp) {
+	  var url = "https://data.sfgov.org/resource/wwmu-gmzc.json?";
+	  url += "$where=starts_with(lower(title),%20%27" + q + "%27)&";
+	  url += "$limit=10";
+	
+	  var url2 = "https://data.sfgov.org/resource/wwmu-gmzc.json?$where=starts_with(lower(actor_1),%20%27" + q + "%27)&$limit=50";
+	
+	  fetch(url, options).then(function (resp) {
 	    return resp.json();
 	  }).then(function (json) {
 	    return success(json);
 	  });
 	};
+	
+	// {
+	// "actor_1":"Siddarth",
+	// "actor_2":"Nithya Menon",
+	// "actor_3":"Priya Anand",
+	// "director":"Jayendra",
+	// "locations":"Epic Roasthouse (399 Embarcadero)",
+	// "production_company":"SPI Cinemas",
+	// "release_year":"2011",
+	// "title":"180",
+	// "writer":"Umarji Anuradha, Jayendra, Aarthi Sriram, & Suba ",
+	// "fun_facts":"During San Francisco's Gold Rush era, the Park was part of an area designated as the \"Great Sand Waste\". ",
+	// }
+
+/***/ },
+/* 204 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+	
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+	
+	var _react = __webpack_require__(166);
+	
+	var _react2 = _interopRequireDefault(_react);
+	
+	var _map_con = __webpack_require__(205);
+	
+	var _map_con2 = _interopRequireDefault(_map_con);
+	
+	var _search_con = __webpack_require__(196);
+	
+	var _search_con2 = _interopRequireDefault(_search_con);
+	
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+	
+	exports.default = function () {
+	  return _react2.default.createElement(
+	    'section',
+	    null,
+	    _react2.default.createElement(_map_con2.default, null),
+	    _react2.default.createElement(_search_con2.default, null)
+	  );
+	};
+
+/***/ },
+/* 205 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+	
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+	
+	var _reactRedux = __webpack_require__(173);
+	
+	var _map = __webpack_require__(206);
+	
+	var _map2 = _interopRequireDefault(_map);
+	
+	var _actions = __webpack_require__(198);
+	
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+	
+	var MapStateToProps = function MapStateToProps(state) {
+	  return {
+	    places: state.places
+	  };
+	};
+	
+	var MapDispatchToProps = function MapDispatchToProps(dispatch) {
+	  return {};
+	};
+	
+	exports.default = (0, _reactRedux.connect)(MapStateToProps, MapDispatchToProps)(_map2.default);
+
+/***/ },
+/* 206 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+	
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+	
+	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+	
+	var _react = __webpack_require__(166);
+	
+	var _react2 = _interopRequireDefault(_react);
+	
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+	
+	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+	
+	function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+	
+	function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+	
+	var Map = function (_React$Component) {
+	  _inherits(Map, _React$Component);
+	
+	  function Map() {
+	    _classCallCheck(this, Map);
+	
+	    return _possibleConstructorReturn(this, (Map.__proto__ || Object.getPrototypeOf(Map)).apply(this, arguments));
+	  }
+	
+	  _createClass(Map, [{
+	    key: 'componentDidMount',
+	    value: function componentDidMount() {
+	      // create map
+	      var sflatlng = new google.maps.LatLng(37.7749, -122.4194);
+	      var mapOptions = {
+	        zoom: 12,
+	        center: sflatlng
+	      };
+	      this.map = new google.maps.Map(document.getElementById('map'), mapOptions);
+	      this.geocoder = new google.maps.Geocoder();
+	      this.geocoderLookup = {};
+	    }
+	  }, {
+	    key: 'render',
+	    value: function render() {
+	      this.placeMarkers();
+	      return _react2.default.createElement('div', { id: 'map' });
+	    }
+	  }, {
+	    key: 'placeMarkers',
+	    value: function placeMarkers() {
+	      var _this2 = this;
+	
+	      // places markers on the map for every location in this.props.places
+	      this.resetMarkers();
+	      this.props.places.forEach(function (place) {
+	        if (_this2.geocoderLookup[place.locations]) {
+	          _this2.createMarker(_this2.geocoderLookup[place.locations], place);
+	        } else {
+	          _this2.geocoder.geocode({ 'address': place.locations + ' SF' }, function (results, status) {
+	            if (status == 'OK') {
+	              _this2.createMarker(results[0].geometry.location, place);
+	              _this2.geocoderLookup[place.locations] = results[0].geometry.location;
+	            } else {
+	              console.log('Geocode was not successful for the following reason: ' + status);
+	            }
+	          });
+	        }
+	      });
+	    }
+	  }, {
+	    key: 'resetMarkers',
+	    value: function resetMarkers() {
+	      this.markers = this.markers || [];
+	      this.markers.forEach(function (marker) {
+	        return marker.setMap(null);
+	      });
+	      this.markers = [];
+	      this.infowindows = [];
+	    }
+	  }, {
+	    key: 'createMarker',
+	    value: function createMarker(location, place) {
+	      var marker = new google.maps.Marker({
+	        map: this.map,
+	        position: location
+	      });
+	      var infowindow = this.createInfoWindow(place);
+	      marker.addListener('click', function () {
+	        infowindow.open(this.map, marker);
+	      });
+	      this.markers.push(marker);
+	      this.infowindows.push(infowindow);
+	    }
+	  }, {
+	    key: 'createInfoWindow',
+	    value: function createInfoWindow(place) {
+	      var contentString = '<p>Movie: ' + place.title + '</p>' + ('<p>Actors: ' + place.actor_1 + ', ' + place.actor_2 + ', ' + place.actor_3 + '</p>') + ('<p>Director: ' + place.director + '</p>') + ('<p>Release Year: ' + place.release_year + '</p>') + (place.fun_facts ? 'Fun Facts: ' + place.fun_facts : '');
+	      var iw = new google.maps.InfoWindow({
+	        content: contentString
+	      });
+	
+	      return iw;
+	    }
+	  }]);
+	
+	  return Map;
+	}(_react2.default.Component);
+	
+	exports.default = Map;
 
 /***/ }
 /******/ ]);

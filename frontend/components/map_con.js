@@ -1,6 +1,6 @@
 import { connect } from 'react-redux'
 import Map from './map'
-import { updateQuery } from './actions'
+import { updateQuery } from '../actions'
 
 const MapStateToProps = (state) => ({
   places: state.places
